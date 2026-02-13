@@ -1,6 +1,7 @@
 services:
   shadowserver-ingestor:
     build: .
+    image: shadowserver-ingestor:latest
     container_name: shadowserver-ingestor
     restart: unless-stopped
     env_file: .env
