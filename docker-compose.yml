@@ -1,0 +1,17 @@
+services:
+  shadowserver-ingestor:
+    build: .
+    container_name: shadowserver-ingestor
+    restart: unless-stopped
+    env_file: .env
+    networks:
+      - postgres-net
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8088')"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+
+networks:
+  postgres-net:
+    external: true
