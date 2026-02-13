@@ -1,6 +1,19 @@
-# Shadowserver Ingestor
+<p align="center">
+  <h1 align="center">Shadowserver Ingestor</h1>
+  <p align="center">
+    Fetches scan reports from the <a href="https://www.shadowserver.org/">Shadowserver</a> API and writes them to PostgreSQL.<br>
+    Designed to pair with <a href="https://github.com/Pr0mp7/iris-data-explorer">IRIS Data Explorer</a> for DFIR-IRIS case correlation.
+  </p>
+</p>
 
-Standalone service that fetches scan reports from the [Shadowserver](https://www.shadowserver.org/) API and writes them to PostgreSQL. Designed to pair with [IRIS Data Explorer](https://github.com/Pr0mp7/iris-data-explorer) for correlation with DFIR-IRIS case data.
+<p align="center">
+  <a href="https://github.com/Pr0mp7/shadowserver-ingestor/releases"><img src="https://img.shields.io/github/v/release/Pr0mp7/shadowserver-ingestor?style=flat-square&color=blue" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/Pr0mp7/shadowserver-ingestor?style=flat-square" alt="License"></a>
+  <img src="https://img.shields.io/badge/python-3.11-blue?style=flat-square&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/docker-ready-blue?style=flat-square&logo=docker&logoColor=white" alt="Docker">
+</p>
+
+---
 
 ## Features
 
@@ -9,7 +22,7 @@ Standalone service that fetches scan reports from the [Shadowserver](https://www
 - **SHA256-based dedup** — no duplicate events on re-ingestion
 - **Scheduled ingestion** every 15 minutes (configurable)
 - **Auto-backfill** on first start (default: 7 days)
-- **Health endpoint** on port 8088 for Docker healthchecks
+- **Health endpoint** for Docker healthchecks
 - **Ingestion audit log** — tracks every run with event counts and errors
 - **Per-report error handling** — one failure doesn't stop other reports
 
@@ -28,7 +41,21 @@ docker compose up -d
 - PostgreSQL database with a read-write user
 - Shadowserver API key and secret ([request access](https://www.shadowserver.org/what-we-do/network-reporting/))
 
-The ingestor auto-creates the database schema (`ss_events`, `ss_reports`, `ss_ingestion_log`) on first start.
+The ingestor auto-creates the database schema on first start.
+
+## Architecture
+
+```
+Shadowserver API ──HTTPS/HMAC──► shadowserver-ingestor
+  reports/list                        │
+  dl.shadowserver.org/{id} (CSV)      │ writes every 15min
+                                      ▼
+                               PostgreSQL (shadowserver_db)
+                                      │
+                                      │ reads (optional)
+                                      ▼
+                               IRIS Data Explorer (port 8087)
+```
 
 ## Configuration
 
@@ -62,8 +89,10 @@ docker exec shadowserver-ingestor python -m ingestor.main --backfill 30
 
 ## Database Schema
 
-### ss_events
-All events from all report types. Hybrid schema: indexed common columns + JSONB for complete data.
+<details>
+<summary><strong>ss_events</strong> — all events from all report types</summary>
+
+Hybrid schema: indexed common columns + JSONB for complete data.
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -81,11 +110,21 @@ All events from all report types. Hybrid schema: indexed common columns + JSONB 
 
 **Dedup**: `UNIQUE(report_type, report_date, event_hash)`
 
-### ss_reports
-Tracks which report types have been ingested per date.
+</details>
 
-### ss_ingestion_log
-Audit trail: run start/finish, status, event counts, errors.
+<details>
+<summary><strong>ss_reports</strong> — tracks ingested report types per date</summary>
+
+Records which reports have been ingested and when, with event counts.
+
+</details>
+
+<details>
+<summary><strong>ss_ingestion_log</strong> — audit trail</summary>
+
+Logs every ingestion run: start/finish timestamps, status, events ingested/skipped, and error messages.
+
+</details>
 
 ## Database Setup
 
@@ -99,20 +138,11 @@ CREATE USER shadowserver_viewer WITH PASSWORD 'your-password';
 -- (SELECT grants are applied automatically by schema.py)
 ```
 
-## Architecture
+## Related
 
-```
-Shadowserver API ──HTTPS/HMAC──► shadowserver-ingestor
-  reports/list                        │
-  dl.shadowserver.org/{id} (CSV)      │ writes every 15min
-                                      ▼
-                               PostgreSQL (shadowserver_db)
-                                      │
-                                      │ reads (optional)
-                                      ▼
-                               IRIS Data Explorer (port 8087)
-```
+- **[iris-data-explorer](https://github.com/Pr0mp7/iris-data-explorer)** — interactive case data explorer that reads from this service's database
+- **[DFIR-IRIS](https://github.com/dfir-iris/iris-web)** — the incident response platform
 
 ## License
 
-LGPL-3.0 — see [LICENSE](LICENSE).
+[LGPL-3.0](LICENSE)
