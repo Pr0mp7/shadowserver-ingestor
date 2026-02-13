@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/Pr0mp7/shadowserver-ingestor/releases"><img src="https://img.shields.io/github/v/release/Pr0mp7/shadowserver-ingestor?style=flat-square&color=blue" alt="Release"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/Pr0mp7/shadowserver-ingestor?style=flat-square" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-LGPL--3.0-blue?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/python-3.11-blue?style=flat-square&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/docker-ready-blue?style=flat-square&logo=docker&logoColor=white" alt="Docker">
 </p>
